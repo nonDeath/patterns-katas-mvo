@@ -3,7 +3,6 @@
 $(function() {
     var model = {
         init: function () {
-            localStorage.clear();
             if (!localStorage.cats) {
                 localStorage.cats = JSON.stringify([
                     {
@@ -90,6 +89,52 @@ $(function() {
         }
     };
 
+    var adminView = {
+        init: function () {
+            this.form = $('form[name="catEditForm"]');
+            this.trigger = $('#admin');
+            this.cancel = $('#cancel');
+
+            this.form.hide();
+            this.trigger.show();
+
+            this.trigger.click(function (event) {
+                adminView.render();
+            });
+
+            this.cancel.click(function (event) {
+                adminView.trigger.show();
+                adminView.form.hide();
+            });
+
+            this.form.submit(function (event) {
+                event.preventDefault();
+                octopus.update({
+                    name: adminView.form.find('input[name="name"]').val(),
+                    clickCounter: adminView.form.find('input[name="clickCounter"]').val(),
+                    imageSrc: adminView.form.find('input[name="imageSrc"]').val()
+                });
+                return false;
+            });
+        },
+
+        render: function () {
+            var current = octopus.getCurrent();
+
+            this.form.find('input[name="name"]').val(current.name);
+            this.form.find('input[name="clickCounter"]').val(current.clickCounter);
+            this.form.find('input[name="imageSrc"]').val(current.imageSrc);
+
+            if (this.trigger.is(':visible')) {
+                this.trigger.hide();
+                this.form.show();
+            } else {
+                this.trigger.show();
+                this.form.hide();
+            }
+        }
+    };
+
     var octopus = {
         current: null,
 
@@ -108,11 +153,19 @@ $(function() {
 
         updateCurrent: function () {
             var current = this.getCurrent();
-            current.clickCounter += 1;
+
+            current.clickCounter = (new Number(current.clickCounter)) + 1;
 
             model.update(this.current, current);
 
             detailView.render();
+        },
+
+        update: function (data) {
+            console.log(data);
+            model.update(this.current, data);
+            detailView.render();
+            adminView.render();
         },
 
         init: function () {
@@ -120,6 +173,7 @@ $(function() {
             model.init();
             detailView.init();
             listView.init();
+            adminView.init();
         }
     };
 
